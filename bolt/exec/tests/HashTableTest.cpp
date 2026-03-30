@@ -584,6 +584,13 @@ class HashTableTest : public testing::TestWithParam<HashTableTestParam>,
     ASSERT_EQ(table->hashMode(), mode);
     std::vector<char*> rows(nullValues.size());
     BaseHashTable::NullKeyRowsIterator iter;
+    // auto numRows = table->listNullKeyRows(&iter, rows.size(), rows.data());
+    std::vector<std::unique_ptr<VectorHasher>> probeHashers;
+    probeHashers.push_back(std::make_unique<VectorHasher>(keys->type(), 0));
+    auto nullKeyProbeInput = BaseVector::create(keys->type(), 1, pool());
+    nullKeyProbeInput->setNull(0, true);
+    SelectivityVector selectivity(1);
+    probeHashers[0]->decode(*nullKeyProbeInput, selectivity);
     auto numRows = table->listNullKeyRows(&iter, rows.size(), rows.data());
     ASSERT_EQ(numRows, nullValues.size());
     auto actual =
