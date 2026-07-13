@@ -96,6 +96,7 @@ struct SetAccumulator {
     const auto size = arrayVector.sizeAt(index);
     const auto offset = arrayVector.offsetAt(index);
 
+    uniqueValues.reserve(uniqueValues.size() + size);
     for (auto i = 0; i < size; ++i) {
       addValue(values, offset + i, allocator);
     }
@@ -123,8 +124,16 @@ struct SetAccumulator {
     const auto size = arrayVector.sizeAt(index);
     const auto offset = arrayVector.offsetAt(index);
 
-    for (auto i = 0; i < size; ++i) {
-      addNonNullValue(values, offset + i, allocator);
+    uniqueValues.reserve(uniqueValues.size() + size);
+    if (!values.mayHaveNulls()) {
+      for (auto i = 0; i < size; ++i) {
+        const auto cnt = uniqueValues.size();
+        uniqueValues.insert({values.valueAt<T>(offset + i), cnt});
+      }
+    } else {
+      for (auto i = 0; i < size; ++i) {
+        addNonNullValue(values, offset + i, allocator);
+      }
     }
   }
 
@@ -196,6 +205,7 @@ struct StringViewSetAccumulator {
     const auto size = arrayVector.sizeAt(index);
     const auto offset = arrayVector.offsetAt(index);
 
+    base.uniqueValues.reserve(base.uniqueValues.size() + size);
     for (auto i = 0; i < size; ++i) {
       addValue(values, offset + i, allocator);
     }
@@ -227,6 +237,7 @@ struct StringViewSetAccumulator {
     const auto size = arrayVector.sizeAt(index);
     const auto offset = arrayVector.offsetAt(index);
 
+    base.uniqueValues.reserve(base.uniqueValues.size() + size);
     for (auto i = 0; i < size; ++i) {
       addNonNullValue(values, offset + i, allocator);
     }
